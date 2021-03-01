@@ -9,7 +9,15 @@ const app = new Koa();
 app.use(ctx => {
   const { url, query } = ctx.request;
   if(url === '/') {
-    const html = fs.readFileSync("./index.html");
+    let html = fs.readFileSync("./index.html", 'utf-8');
+    html = html.replace("<script", `
+      <script>
+        window.process = {
+          env: { NODE_ENV: 'dev' }
+        }
+      </script>
+      <script
+    `)
     ctx.type = "text/html";
     ctx.body = html;
   }else if(url.endsWith('.js')) {
@@ -18,21 +26,25 @@ app.use(ctx => {
       // import xx from 'vue' 替换成 import xx from '/@module/vue'
       // koa 监听到以 /@modules 开头的，就去 node_modules 里面去查找
     // 2. 支持 .vue 单文件组件的解析
+      // .vue 文件浏览器是不认识的 浏览器只认识 js
+      // .vue 单文件组件，拆分 script template
+      // template => render 函数， 拼成一个对象
+      // script.render = render
     // 3. 支持 import css
     // 比如热更新， ts 支持
     const p = path.resolve(__dirname, url.slice(1));
     ctx.type = "application/javascript";
     // 1. 支持 npm 包的 import
       // import xx from 'vue' 替换成 import xx from '/@module/vue'
-    const file = rewriteImport(fs.readFileSync(p, 'utf-8'));
-    ctx.body = file;
-  }else if(url.startsWith('/@modules')) {
+    const file = fs.readFileSync(p, 'utf-8');
+    ctx.body = rewriteImport(file);
+  }else if(url.startsWith('/@modules/')) {
     // 这个模块，不是本地文件，而是 node_modules 连查找
-    const module = path.resolve(__dirname, 'node_modules', url.slice(10));
-    const main = JSON.parse(fs.readFileSync(path.resolve(module, 'package.json'), 'utf-8'))['jsnext:main'];
-    const file = fs.readFileSync(path.resolve(module, main), 'utf-8');
+    const prefix = path.resolve(__dirname, 'node_modules', url.replace("/@modules/", ""));
+    const module = require(`${prefix}/package.json`).module;
+    const file = fs.readFileSync(path.resolve(prefix, module), 'utf-8');
     ctx.type = "application/javascript";
-    ctx.body = file;
+    ctx.body = rewriteImport(file);
   }
 });
 

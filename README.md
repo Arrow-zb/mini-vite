@@ -36,26 +36,30 @@ import xx from module  // 就会发起一个网络请求
   ```js
   function rewriteImport(content) {
     // 目的是改造 .js 文件内容， 不是 "/", "./", or "../" 开头的 import，替换成 /@modules/ 开头
-    return content.replace(/from\s+['|"]([^'"]+)['|"]/g, ($0, $1) => {
+    return content.replace(/\s+from\s+['|"]([^'"]+)['|"]/g, ($0, $1) => {
       if($1[0] !== '.' && $1[0] !== '/') {
-        return `from "/@modules/${$1}"`
+        return ` from "/@modules/${$1}"`
       }else {
         return $0
       }
     })
-  };
+  }
   ```
   koa 监听到以 /@modules 开头的，就去 node_modules 里面去查找
   ```js
   if(url.startsWith('/@modules')) {
-    const module = path.resolve(__dirname, 'node_modules', url.slice(10));
-    const main = JSON.parse(fs.readFileSync(path.resolve(module, 'package.json'), 'utf-8'))['jsnext:main'];
-    const file = fs.readFileSync(path.resolve(module, main), 'utf-8');
+    // 这个模块，不是本地文件，而是 node_modules 连查找
+    const prefix = path.resolve(__dirname, 'node_modules', url.replace("/@modules/", ""));
+    const module = require(`${prefix}/package.json`).module;
+    const file = fs.readFileSync(path.resolve(prefix, module), 'utf-8');
     ctx.type = "application/javascript";
-    ctx.body = file;
+    ctx.body = rewriteImport(file);
   }
   ```
 
 2. 支持 .vue 单文件组件的解析
+  - .vue 文件浏览器是不认识的 浏览器只认识 js
+  - .vue 单文件组件，拆分 script template
+  - template => render 函数， 拼成一个对象
 3. 支持 import css
 4. 比如热更新， ts 支持

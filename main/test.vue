@@ -1,5 +1,6 @@
 <template>
   <div>
+      <h1>this is vite test</h1>
       <button @click="add">count: {{ count }}</button>
   </div>
 </template>
@@ -19,3 +20,4 @@ export default {
   }
 }
 </script>
+

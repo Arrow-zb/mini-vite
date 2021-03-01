@@ -61,5 +61,44 @@ import xx from module  // 就会发起一个网络请求
   - .vue 文件浏览器是不认识的 浏览器只认识 js
   - .vue 单文件组件，拆分 script template
   - template => render 函数， 拼成一个对象
+  ```js
+  // import xx from 'xx.vue';
+    // 1. 单文件组件解析
+    const p = path.resolve(__dirname, url.split('?')[0].slice(1));
+    // 解析单文件组件，需要官方的库   @vue/compiler-sfc
+    const { descriptor } =  compilerSfc.parse(fs.readFileSync(p, 'utf-8'));
+    if(!query.type) {
+      // js内容
+      ctx.type = "application/javascript";
+      ctx.body = `
+      ${rewriteImport(descriptor.script.content.replace("export default ", 'const __script = '))};
+
+      import { render as __render } from "${url}?type=template";
+      __script.render = __render;
+      export default __script;
+      `
+    }else if(query.type === 'template'){
+      // 解析我们的 template 变成 render 函数 @vue/compiler-dom
+      const template = descriptor.template;
+      const render = compilerDom.compile(template.content, { mode: "module" }).code;
+      ctx.type = "application/javascript";
+      ctx.body = rewriteImport(render);
+    }
+  ```
 3. 支持 import css
+```js
+    // 浏览器 import 仅支持 js，因此，将 css 转换成 js 即可
+    const p = path.resolve(__dirname, url.slice(1));
+    const file = fs.readFileSync(p, "utf-8");
+    const content = `
+      const css = "${file.replace(/\n/g, '')}";
+      const style = document.createElement("style");
+      style.innerHTML = css;
+      style.setAttribute('type', 'text/css');
+      document.head.appendChild(style);
+      export default css;
+    `;
+    ctx.type = "application/javascript";
+    ctx.body = content;
+```
 4. 比如热更新， ts 支持

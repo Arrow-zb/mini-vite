@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Koa = require('koa');
 const compilerSfc = require('@vue/compiler-sfc');
+const compilerDom = require('@vue/compiler-dom');
 
 const rewriteImport = require('./utils/rewriteImport');
 
@@ -46,13 +47,43 @@ app.use(ctx => {
     const file = fs.readFileSync(path.resolve(prefix, module), 'utf-8');
     ctx.type = "application/javascript";
     ctx.body = rewriteImport(file);
-  }else if(url.endsWith(".vue")) {
+  }else if(url.indexOf(".vue") !== -1) {
     // import xx from 'xx.vue';
     // 1. 单文件组件解析
     const p = path.resolve(__dirname, url.split('?')[0].slice(1));
     // 解析单文件组件，需要官方的库   @vue/compiler-sfc
     const { descriptor } =  compilerSfc.parse(fs.readFileSync(p, 'utf-8'));
-    console.log(descriptor);
+    if(!query.type) {
+      // js内容
+      ctx.type = "application/javascript";
+      ctx.body = `
+      ${rewriteImport(descriptor.script.content.replace("export default ", 'const __script = '))};
+
+import { render as __render } from "${url}?type=template";
+__script.render = __render;
+export default __script;
+      `
+    }else if(query.type === 'template'){
+      // 解析我们的 template 变成 render 函数 @vue/compiler-dom
+      const template = descriptor.template;
+      const render = compilerDom.compile(template.content, { mode: "module" }).code;
+      ctx.type = "application/javascript";
+      ctx.body = rewriteImport(render);
+    }
+  }else if(url.endsWith('.css')) {
+    // 浏览器 import 仅支持 js，因此，将 css 转换成 js 即可
+    const p = path.resolve(__dirname, url.slice(1));
+    const file = fs.readFileSync(p, "utf-8");
+    const content = `
+      const css = "${file.replace(/\n/g, '')}";
+      const style = document.createElement("style");
+      style.innerHTML = css;
+      style.setAttribute('type', 'text/css');
+      document.head.appendChild(style);
+      export default css;
+    `;
+    ctx.type = "application/javascript";
+    ctx.body = content;
   }
 });
 

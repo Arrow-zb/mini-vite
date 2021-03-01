@@ -5,9 +5,9 @@ console.log(res);
 
 // 如果不是 "/", "./", or "../" 开头的，就认为是来源自 node_module
 // 那么就需要去 node_modules 里面找
-import { reactive, createApp } from "vue";
+import { createApp } from 'vue';
+// console.log(createApp)
+import App from './test.vue';
+import './index.css'
 
-console.log(createApp);
-
-import test from "./test.vue";
-
+createApp(App).mount('#app');

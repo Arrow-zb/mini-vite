@@ -16,7 +16,7 @@ function track(target, key) {
   const effect = effectStack[effectStack.length - 1];
   if(effect) {
     // 需要收集
-    let depMap = target.get(target);
+    let depMap = targetMap.get(target);
     if(depMap === undefined) {
       depMap = new Map();
       targetMap.set(target, depMap);
@@ -36,6 +36,7 @@ function track(target, key) {
       effect.deps.push(dep);
     }
   }
+  console.log(targetMap);
 };
 
 function trigger(target, key, info) {
@@ -107,10 +108,17 @@ function createReactiveEffect(fn, options) {
 // 调度
 function run(effect, fn, args) {
   // 执行
-  // if()
-}
+  if(effectStack.indexOf(effect) === -1) {
+    try{
+      effectStack.push(effect);
+      return fn(...args);
+    }finally {
+      effectStack.pop();
+    }
+  } 
+};
 
-function computed() {
+function computed(fn) {
   const runner = effect(fn, { computed: true, lazy: true });
   return {
     effect: runner,

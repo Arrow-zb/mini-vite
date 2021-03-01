@@ -1,22 +1,26 @@
-# 前言  
-## Vue 3 新增了什么
+#  前言  
+  
+##  Vue 3 新增了什么
+  
 - 性能（比 vue2 快了 2 倍） 真正的做到了按需更新，基于位运算
 - tree shaking (按需编译代码, 真正的实现了按需加载，不像 this， this 是一个黑盒) 
 - composition api (类似于 hooks)
 - ts support (ts)
 - custom renderer api (自定义渲染)
-
+  
 响应式 + 虚拟 dom + 模板编译 + 组件化
-
-## composition api
+  
+##  composition api
+  
 option api: 
 - 维护时，上下反复横跳
 - 
 composition api
 基于函数组合的 api
-
-# mini-vite 思路
-
+  
+#  mini-vite 思路
+  
+  
 编译时的优化是 Vue3 最大的特点(2017年 尤大大 在微博中就提到了 facebook 的一个库 prepack)
 其中，vite 这个工具简直神奇，其主要的思路如下：
 - 现在浏览器支持 es6 的import，当 script 标签中 type = module 时， 可以支持 js 中 import 语法，比如
@@ -27,8 +31,9 @@ import xx from module  // 就会发起一个网络请求
 - vite 拦截这个请求，去做相应的 vue 的编译、解析等，实现按需加载的能力
 - vite 的好处就是不再打包了，而是基于浏览器支持来实现的
   dev 秒开， build 为 rollup
-
-# 实现
+  
+#  实现
+  
 直接基于 koa 搭建一个服务
 实现目标：
 1. 支持 npm 包的 import， 
@@ -56,7 +61,7 @@ import xx from module  // 就会发起一个网络请求
     ctx.body = rewriteImport(file);
   }
   ```
-
+  
 2. 支持 .vue 单文件组件的解析
   - .vue 文件浏览器是不认识的 浏览器只认识 js
   - .vue 单文件组件，拆分 script template
@@ -72,7 +77,7 @@ import xx from module  // 就会发起一个网络请求
       ctx.type = "application/javascript";
       ctx.body = `
       ${rewriteImport(descriptor.script.content.replace("export default ", 'const __script = '))};
-
+  
       import { render as __render } from "${url}?type=template";
       __script.render = __render;
       export default __script;
@@ -104,15 +109,17 @@ import xx from module  // 就会发起一个网络请求
 4. 热更新
 - 思路是在 index.html 中注入一个 socket, 后端文件变了，通知前端去更新
 5. ts 支持
-
-# vite 原理有啥用
+  
+#  vite 原理有啥用
+  
 1. vue3 配套的工具，下一代的脚手架工具
 2. 写一个 vite，完整的掌握了 vue3 代码编译的流程（使用层面）
 3. ssr node 解析 .vue
-
+  
 编译过程
 - 将 template 或者 jsx 转换成 vdom(createElement) 的形式
 - 写的依然是 html， 实际执行的是 js
 - template => render 函数，经典编译（vue3, 经典的编译优化）
 - ast => transform => generate
-![编译过程](./img/ast->transform->generate.png);
+![编译过程]( "./img/ast->transform->generate.png")
+  

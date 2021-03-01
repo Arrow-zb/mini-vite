@@ -27,6 +27,7 @@ app.use(ctx => {
     const file = rewriteImport(fs.readFileSync(p, 'utf-8'));
     ctx.body = file;
   }else if(url.startsWith('/@modules')) {
+    // 这个模块，不是本地文件，而是 node_modules 连查找
     const module = path.resolve(__dirname, 'node_modules', url.slice(10));
     const main = JSON.parse(fs.readFileSync(path.resolve(module, 'package.json'), 'utf-8'))['jsnext:main'];
     const file = fs.readFileSync(path.resolve(module, main), 'utf-8');

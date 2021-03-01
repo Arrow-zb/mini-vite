@@ -4,6 +4,7 @@
   "description": "编译时的优化是 Vue3 最大的特点",
   "main": "index.js",
   "scripts": {
+    "start": "node ./app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -18,8 +19,10 @@
   },
   "homepage": "https://github.com/Arrow-zb/mini-vite#readme",
   "dependencies": {
+    "@vue/compiler-sfc": "^3.0.6",
     "koa": "^2.13.1",
-    "moment": "^2.29.1"
+    "moment": "^2.29.1",
+    "vue": "^3.0.4"
   },
   "devDependencies": {
     "create-vite-app": "^1.21.0"

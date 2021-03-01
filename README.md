@@ -1,10 +1,12 @@
 # 前言  
 ## Vue 3 新增了什么
 - 性能（比 vue2 快了 2 倍） 真正的做到了按需更新，基于位运算
-- tree shaking (按需编译代码) 
+- tree shaking (按需编译代码, 真正的实现了按需加载，不像 this， this 是一个黑盒) 
 - composition api (类似于 hooks)
 - ts support (ts)
 - custom renderer api (自定义渲染)
+
+响应式 + 虚拟 dom + 模板编译 + 组件化
 
 ## composition api
 option api: 

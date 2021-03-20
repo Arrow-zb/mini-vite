@@ -39,6 +39,7 @@ app.use(ctx => {
     // 1. 支持 npm 包的 import
       // import xx from 'vue' 替换成 import xx from '/@module/vue'
     const file = fs.readFileSync(p, 'utf-8');
+    console.log(rewriteImport(file));
     ctx.body = rewriteImport(file);
   }else if(url.startsWith('/@modules/')) {
     // 这个模块，不是本地文件，而是 node_modules 连查找
